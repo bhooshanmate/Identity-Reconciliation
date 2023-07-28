@@ -108,7 +108,6 @@ public class ContactService {
         return primaryContact;
     }
 
-
     private Contact createOrUpdateSecondaryContact(ConsolidatedContact consolidatedContact, Contact secondaryContact,Contact primaryContact) {
         // if(!contactExist) {
         //     return new Contact.Builder()
