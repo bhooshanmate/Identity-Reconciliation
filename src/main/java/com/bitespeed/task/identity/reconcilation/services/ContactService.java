@@ -8,9 +8,11 @@ import com.bitespeed.task.identity.reconcilation.repository.ContactRepository;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+
 
 
 
@@ -70,33 +72,23 @@ public class ContactService {
     private IdentityResponse prepareIdentityReponse(Contact contact,Contact primaryContact, Contact secondaryContact) {
         IdentityResponse.Builder responseBuilder = new IdentityResponse.Builder();
         responseBuilder.setPrimaryContactId(contact.getLinkedId());
-
-            List<String> emails = new ArrayList<>();
-            List<String> phoneNumbers = new ArrayList<>();
-            if(primaryContact != null) {
-                emails.add(primaryContact.getEmail());
-                phoneNumbers.add(primaryContact.getPhoneNumber());
+        List<Contact> contactsForResponse = new ArrayList<>();
+        List<String> emails = new ArrayList<>();
+        List<String> phoneNumbers = new ArrayList<>();
+        
+        if(contact.getLinkedId() != null) {
+            contactsForResponse = contactRepository.getContactsForReponse(contact.getLinkedId());
+            for(Contact c : contactsForResponse){
+                emails.add(c.getEmail());
+                phoneNumbers.add(c.getPhoneNumber());
             }
-            else {
-                emails.add(contact.getEmail());
-                phoneNumbers.add(contact.getPhoneNumber());
-            }
-            if(secondaryContact != null) {
-                emails.add(secondaryContact.getEmail());
-                phoneNumbers.add(secondaryContact.getPhoneNumber());
-            }
-            else {
-                emails.add(contact.getEmail());
-                phoneNumbers.add(contact.getPhoneNumber());
-            }
-            responseBuilder.setEmails(emails);
-            responseBuilder.setPhoneNumbers(phoneNumbers);
-// 
-        // if((contact.getLinkPrecedence().equals("primary"))) {
-            // List<Integer> secondaryContactIds = contactRepository.findSecondaryContactIds(contact.getId());
-            // responseBuilder.setSecondaryContactIds(secondaryContactIds);
-        // }
-         List<Integer> secondaryContactIds = contactRepository.findSecondaryContactIds(contact.getId());
+        }
+            responseBuilder.setEmails(emails.stream().distinct().collect(Collectors.toList()));
+            responseBuilder.setPhoneNumbers(phoneNumbers.stream().distinct().collect(Collectors.toList()));
+            
+            // for the response fields
+         List<Integer> secondaryContactIds = contactRepository.findSecondaryContactIds(contact.getLinkedId());
+         System.out.println(secondaryContactIds);
             responseBuilder.setSecondaryContactIds(secondaryContactIds);
         return responseBuilder.build();
     }
@@ -108,27 +100,12 @@ public class ContactService {
         return primaryContact;
     }
 
+    // changes the state of db and does not create 
     private Contact createOrUpdateSecondaryContact(ConsolidatedContact consolidatedContact, Contact secondaryContact,Contact primaryContact) {
-        // if(!contactExist) {
-        //     return new Contact.Builder()
-        //         .phoneNumber(consolidatedContact.getPhoneNumber())
-        //         .email(consolidatedContact.getEmail())
-        //         .linkedId(primaryContact.getId())
-        //         .linkPrecedence("secondary")
-        //         .createdAt(LocalDateTime.now())
-        //         .updatedAt(LocalDateTime.now())
-        //         .build();
-        // }
         secondaryContact.setLinkPrecedence("secondary");
             secondaryContact.setLinkedId(primaryContact.getId());
             System.out.println("db state changed!");
             return secondaryContact;
-        // else {
-        //     secondaryContact.setLinkPrecedence("secondary");
-        //     secondaryContact.setLinkedId(primaryContact.getId());
-        //     System.out.println("db state changed!");
-        //     return secondaryContact;
-        // }
     }
 
     private List<Contact> determinePrimaryAndSecondaryContact(List<Contact> emails, List<Contact> phoneNumbers) {
@@ -153,20 +130,7 @@ public class ContactService {
         return result;
     }
 
-    // private Contact determineSecondaryContact(List<Contact> emails, List<Contact> phoneNumbers) {
-    //     Contact secondaryContact = null;
-    //     if(!emails.isEmpty()) {
-    //         secondaryContact = emails.get(0);
-    //     }
-    //     if(!phoneNumbers.isEmpty()) {
-    //         Contact phoneNumberPrimary = phoneNumbers.get(0);
-    //         if (secondaryContact == null || phoneNumberPrimary.getId() > secondaryContact.getId()) {
-    //             secondaryContact = phoneNumberPrimary;
-    //         }
-    //     }
-    //     return secondaryContact;
-    // }
-
+    // creates new entry in db if one of the arrtibutes of incoming req matches one of the attributes of contact present in db
     public Contact createOrUpdateContact(ConsolidatedContact consolidatedContact) {
 
             Integer existingContactId = findContactIdByConsolidatedContact(consolidatedContact);

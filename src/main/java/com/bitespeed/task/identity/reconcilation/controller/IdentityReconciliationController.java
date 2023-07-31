@@ -23,6 +23,11 @@ public class IdentityReconciliationController {
         return ResponseEntity.ok(response);
     }
 
+    @GetMapping("/")
+    public String home(){
+        return "<h1>Hi there, this is home page, please refer to this readme file (https://github.com/bhooshanmate/Identity-Reconciliation/blob/main/README.md) for endpoints</h1>";
+    }
+
     @GetMapping("/getAll")
     public List<Contact> getAllContacts() {
         return contactService.findAll();

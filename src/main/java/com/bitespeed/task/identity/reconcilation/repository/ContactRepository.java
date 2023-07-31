@@ -18,4 +18,7 @@ public interface ContactRepository extends JpaRepository <Contact,Integer> {
 //    It retrieves the smallest (minimum) id value from the Contact table based on the provided email or phoneNumber.
     @Query("SELECT MIN(c.id) FROM Contact c WHERE c.email = :email OR c.phoneNumber = :phoneNumber")
     Integer findSmallestIdByEmailOrPhoneNumber(@Param("email") String email, @Param("phoneNumber") String phoneNumber);
+    
+    @Query("SELECT c FROM Contact c WHERE c.linkedId = :id OR c.id = :id ORDER BY c.id")
+    List<Contact> getContactsForReponse(@Param("id")Integer integer);
 }
