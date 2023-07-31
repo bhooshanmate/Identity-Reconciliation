@@ -25,7 +25,8 @@ public class IdentityReconciliationController {
 
     @GetMapping("/")
     public String home(){
-        return "<h1>Hi there, this is home page, please refer to this readme file (https://github.com/bhooshanmate/Identity-Reconciliation/blob/main/README.md) for endpoints</h1>";
+        return "<h2>Hi there, this is the home page, please refer to this <a href=\"https://github.com/bhooshanmate/Identity-Reconciliation/blob/main/README.md\">readme file</a> for endpoints</h2>";
+
     }
 
     @GetMapping("/getAll")
